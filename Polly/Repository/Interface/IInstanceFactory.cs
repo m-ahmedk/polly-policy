@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace PollyPolicy.Repository.Interface
 {
-    internal interface IInstanceFactory<T, U> 
+    internal interface IInstanceFactory<T, U>
     {
         public Task<T> GetInstance(U token);
     }

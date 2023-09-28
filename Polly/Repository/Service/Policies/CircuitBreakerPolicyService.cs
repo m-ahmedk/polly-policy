@@ -8,9 +8,9 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PollyPolicy.Repository.Service
+namespace PollyPolicy.Repository.Service.Policies
 {
-    internal class CircuitBreakerPolicyService : IPolicy
+    internal class CircuitBreakerPolicyService : IPolicy<IAsyncPolicy>
     {
         private readonly IConfiguration _configuration;
         private int exceptionsAllowed = 0;

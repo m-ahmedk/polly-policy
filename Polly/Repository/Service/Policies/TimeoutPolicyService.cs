@@ -7,9 +7,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PollyPolicy.Repository.Service
+namespace PollyPolicy.Repository.Service.Policies
 {
-    internal class TimeoutPolicyService : IPolicy
+    internal class TimeoutPolicyService : IPolicy<IAsyncPolicy>
     {
         private readonly IConfiguration _configuration;
         private int timeOutSecond = 0;

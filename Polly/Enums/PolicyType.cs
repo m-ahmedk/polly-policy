@@ -5,6 +5,7 @@
         CircuitBreakerPolicyType,
         FallbackPolicyType,
         RetryPolicyType,
-        TimeoutPolicyType
+        TimeoutPolicyType,
+        CachePolicyType
     }
 }

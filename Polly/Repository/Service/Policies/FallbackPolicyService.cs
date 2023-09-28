@@ -7,9 +7,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PollyPolicy.Repository.Service
+namespace PollyPolicy.Repository.Service.Policies
 {
-    internal class FallbackPolicyService : IPolicy
+    internal class FallbackPolicyService : IPolicy<IAsyncPolicy>
     {
         private int delay = 0;
         private readonly IConfiguration _configuration;
