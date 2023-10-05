@@ -1,22 +1,7 @@
-**/appsettingsOriginal.json
-*/appsettingsOriginal.json
-**/appsettings.json
-*/appsettings.json
-*/appsettings.config
-**/appsettings.config
-*/appsettingsORIGINAL.config
-**/appsettingsORIGINAL.config
-*/connectionsettings.config
-**/connectionsettings.config
-*/connectionsettingsORIGINAL.config
-**/connectionsettingsORIGINAL.config
-
 packages/**
 .vs/**
 */obj/**
-**/obj/**
 */bin/**
-**/bin/**
 */.vs
 
 #Junk Files
