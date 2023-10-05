@@ -8,18 +8,19 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PollyPolicy.Repository.Service
+namespace PollyPolicy.Repository.Service.Policies
 {
-    internal class RetryPolicyService : IPolicy
+    internal class RetryPolicyService : IPolicy<IAsyncPolicy>
     {
         private readonly IConfiguration _configuration;
         private int maxRetries = 0;
         private int delay = 0;
 
-        public RetryPolicyService(IConfiguration configuration) {
+        public RetryPolicyService(IConfiguration configuration)
+        {
             _configuration = configuration;
         }
-        
+
 
         public async Task<IAsyncPolicy> GetPolicy()
         {

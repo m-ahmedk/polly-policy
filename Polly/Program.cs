@@ -1,6 +1,5 @@
 ﻿using Polly;
 using PollyPolicy.Repository.Factory;
-using PollyPolicy.Repository.Service;
 using PollyPolicy.Enums;
 using System;
 using System.Net.Http;
@@ -11,16 +10,22 @@ using Polly.Retry;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.Json;
 using Polly.CircuitBreaker;
+using PollyPolicy.Repository.Service.Policies;
+using Polly.Caching;
+using Microsoft.Extensions.Caching.Memory;
+using PollyPolicy.Repository.Service;
 
 class Program
 {
-    private readonly PolicyFactory _policyFactory;
-    private HttpClient _httpClient;
+    private readonly IInstanceFactory<IPolicy<IAsyncPolicy>, PolicyType> _asyncPolicies;
+    private readonly IInstanceFactory<IPolicy<AsyncCachePolicy<int>>, PolicyType> _asyncCachePolicies;
 
-    public Program(PolicyFactory policyFactory, HttpClient httpClient)
+    public Program(
+        IInstanceFactory<IPolicy<IAsyncPolicy>, PolicyType> asyncPolicies,
+        IInstanceFactory<IPolicy<AsyncCachePolicy<int>>, PolicyType> asyncCachePolicies)
     {
-        _httpClient = httpClient;
-        _policyFactory = policyFactory;
+        _asyncPolicies = asyncPolicies;
+        _asyncCachePolicies = asyncCachePolicies;
     }
 
     static async Task Main(string[] args)
@@ -41,17 +46,21 @@ class Program
     {
         Console.WriteLine("Main started..");
 
-        var getCircuitBreakerPolicy = await _policyFactory.GetInstance(PolicyType.CircuitBreakerPolicyType);
-        var getFallbackPolicy = await _policyFactory.GetInstance(PolicyType.FallbackPolicyType);
-        var getRetryPolicy = await _policyFactory.GetInstance(PolicyType.RetryPolicyType);
-        var getTimeoutPolicy = await _policyFactory.GetInstance(PolicyType.TimeoutPolicyType);
+        var getCircuitBreakerPolicy = await _asyncPolicies.GetInstance(PolicyType.CircuitBreakerPolicyType);
+        var getFallbackPolicy = await _asyncPolicies.GetInstance(PolicyType.FallbackPolicyType);
+        var getRetryPolicy = await _asyncPolicies.GetInstance(PolicyType.RetryPolicyType);
+        var getTimeoutPolicy = await _asyncPolicies.GetInstance(PolicyType.TimeoutPolicyType);
+
+        var getCachePolicy = await _asyncCachePolicies.GetInstance(PolicyType.CachePolicyType);
 
         var circuitbreakerPolicy = await getCircuitBreakerPolicy.GetPolicy();
         var fallbackPolicy = await getFallbackPolicy.GetPolicy();
         var retryPolicy = await getRetryPolicy.GetPolicy();
         var timeoutPolicy = await getTimeoutPolicy.GetPolicy();
 
-        var wrapPolicy = Policy.WrapAsync(circuitbreakerPolicy, fallbackPolicy);
+        var cachePolicy = await getCachePolicy.GetPolicy();
+
+        var wrapPolicy = Policy.WrapAsync(circuitbreakerPolicy, retryPolicy);
 
         try
         {
@@ -80,16 +89,23 @@ class Program
         services.AddTransient<Program>();
 
         // classes that implements IPolicy
-        services.AddScoped<IPolicy, CircuitBreakerPolicyService>();
-        services.AddScoped<IPolicy, FallbackPolicyService>();
-        services.AddScoped<IPolicy, RetryPolicyService>();
-        services.AddScoped<IPolicy, TimeoutPolicyService>();
+        services.AddScoped<IPolicy<AsyncCachePolicy>, CachePolicyService>();
+        services.AddScoped<IPolicy<IAsyncPolicy>, CircuitBreakerPolicyService>();
+        services.AddScoped<IPolicy<IAsyncPolicy>, FallbackPolicyService>();
+        services.AddScoped<IPolicy<IAsyncPolicy>, RetryPolicyService>();
+        services.AddScoped<IPolicy<IAsyncPolicy>, TimeoutPolicyService>();
 
-        services.AddSingleton<IInstanceFactory<IPolicy, PolicyType>, PolicyFactory>();
+        // Register PolicyFactory<IAsyncPolicy> for all policies using this
+        services.AddScoped<IInstanceFactory<IPolicy<IAsyncPolicy>, PolicyType>, PolicyFactory<IAsyncPolicy>>();
 
-        services.AddSingleton<PolicyFactory>(); // needed as used in Program class
+        // Register PolicyFactory<AsyncCachePolicy> for all policies using this
+        services.AddScoped<IInstanceFactory<IPolicy<AsyncCachePolicy>, PolicyType>, PolicyFactory<AsyncCachePolicy>>();
+
         services.AddSingleton<HttpClient>(); // needed as used in Program class
         services.AddSingleton<IConfiguration>(configuration); // needed as used in PolicyService classes
+        services.AddSingleton<RemoteService>(); // Register RemoteService
+
+        services.AddMemoryCache(); // IMemoryCache used
 
         return services.BuildServiceProvider(); // Build and return the service provider
     }

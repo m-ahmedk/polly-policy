@@ -1,7 +1,7 @@
 ﻿using Polly.Retry;
 using PollyPolicy.Enums;
 using PollyPolicy.Repository.Interface;
-using PollyPolicy.Repository.Service;
+using PollyPolicy.Repository.Service.Policies;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,16 +10,16 @@ using System.Threading.Tasks;
 
 namespace PollyPolicy.Repository.Factory
 {
-    internal class PolicyFactory : IInstanceFactory<IPolicy, PolicyType>
+    internal class PolicyFactory<TPolicy> : IInstanceFactory<IPolicy<TPolicy>, PolicyType>
     {
-        private readonly IEnumerable<IPolicy> _policies;
+        private readonly IEnumerable<IPolicy<TPolicy>> _policies;
 
-        public PolicyFactory(IEnumerable<IPolicy> policies)
+        public PolicyFactory(IEnumerable<IPolicy<TPolicy>> policies)
         {
             _policies = policies;
         }
 
-        public async Task<IPolicy> GetInstance(PolicyType token)
+        public async Task<IPolicy<TPolicy>> GetInstance(PolicyType token)
         {
             return token switch
             {
@@ -27,11 +27,12 @@ namespace PollyPolicy.Repository.Factory
                 PolicyType.FallbackPolicyType => await GetService(typeof(FallbackPolicyService)),
                 PolicyType.RetryPolicyType => await GetService(typeof(RetryPolicyService)),
                 PolicyType.TimeoutPolicyType => await GetService(typeof(TimeoutPolicyService)),
+                PolicyType.CachePolicyType => await GetService(typeof(CachePolicyService)),
                 _ => throw new InvalidOperationException()
             };
         }
 
-        public async Task<IPolicy> GetService(Type type)
+        public async Task<IPolicy<TPolicy>> GetService(Type type)
         {
             return _policies.FirstOrDefault(x => x.GetType() == type)!;
         }

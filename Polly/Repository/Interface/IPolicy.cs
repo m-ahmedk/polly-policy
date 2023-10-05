@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace PollyPolicy.Repository.Interface
 {
-    internal interface IPolicy
+    internal interface IPolicy<TPolicy>
     {
-        public Task<IAsyncPolicy> GetPolicy();
+        public Task<TPolicy> GetPolicy();
         public Task assignValues();
     }
 }
