@@ -17,7 +17,7 @@ The project consists of the following components:
 1. Clone the Repository:
 
 ``` 
-git clone https://github.com/mahmedk12/resilient-web-cli.git
+git clone https://github.com/m-ahmedk/resilient-web-cli.git
 cd your-repo
 ```
 
